@@ -3,39 +3,37 @@
 # and
 # cacheSolve - a function which calculates the inverse of the matrix wrapped using the former method
 # and stores it for future use.
-# both functions take only square matrices of numeric/integer types. 
+#
+# As the project description states that input can be assumed to be invertible matrices
+# all parameter checks have been removed.
 
 
 # makeCacheMatrix creates a wrapper around a matrix x
-# It exposes get/set methods to access the internal matrix
+# It exposes get/set methods to access the wrapped matrix
 # and getInverse/setInverse to access the (possibly unset) inverse
 #
-# parameter x a matrix to wrap. Must be numeric or integer valued (or it wouldn't make much sense)
-# returns a list with functions get,set,getInverse,setInverse which wraps a matrix and it's inverse
+# parameter x a matrix to wrap. 
+# returns a list with functions get,set,getInverse,setInverse which 
+# wraps a matrix and a a possible inverse
 makeCacheMatrix <- function(x = matrix()) {
 
-  # checks that input is a matrix of integers or numerics
-  checkIsMatrix <- function(m){
-    is.matrix(m) & ((length(m)==1 & is.na(m[1])) | class(m[0]) %in% c("integer","numeric"))
-  }
-  
-  if(!checkIsMatrix(x))
-    stop("supplied argument x is not an integer or numeric matrix")
-  
+  # cached inverse - intialized to NULL
   theInverse <-NULL
+  
+  #getter of the wrapped matrix, x
   get <- function() x
+  
+  # setter of wrapped matrix - clears cached inverse
   set <- function(y) {
-    if(!checkIsMatrix(y))
-        stop("input is not an integer or numeric matrix")
     x <<- y
     theInverse <<- NULL
   }
   
+  # getter of the cached inverse
   getInverse <- function() theInverse
+  
+  #set the cached inverse
   setInverse <- function(newInverse) {
-    #inverse must also be a square integer/numeric matrix - or NULL
-    if(!is.null(newInverse) & !checkIsMatrix(newInverse))
-      stop("inverse matrix must be null or a square integer/numeric matrix")
     theInverse <<- newInverse
   }
   
@@ -44,22 +42,12 @@ makeCacheMatrix <- function(x = matrix()) {
 }
 
 
-# cacheSolve calculates and caches the inverse of a square matrix 
-# wrapped as a cacheMatrix. It will fail if matrix is not square, contains 
-# NA/NAN/NULL values or is singular
-# 
+# cacheSolve calculates and caches the inverse of a matrix 
+# wrapped as a cacheMatrix. 
+#
 # parameter x = a cacheMatrix to solve
-# returns the inverse of the input x and stores the result in x
+# returns the inverse of the matrix wrapped by x and stores the result in x
 cacheSolve <- function(x,...) {
-  # function that inspects input x
-  checkIsCacheMatrix <- function(m){
-    class(m)=="list" & 
-      setequal(c("get","set", "getInverse", "setInverse"), names(m))
-  }
-  
-  # Check that x is a cacheMatrix
-  if(!checkIsCacheMatrix(x))
-      stop("argument must be a cacheMatrix.")
     
   # Return cached inverse if it's there
   inverse <- x$getInverse()
@@ -68,18 +56,6 @@ cacheSolve <- function(x,...) {
   
   # get the matrix
   data <- x$get()
-  # check if matrix is invertible
-  if(dim(data)[1]!=dim(data)[2]){
-    stop("Matrix is not invertible (not a square)")
-  }
-    
-  if(sum(is.na(data) | is.nan(data) | is.null(data))>0){
-    stop("Matrix is not invertible (contains NA/NaN/NULL")
-  }
-  
-  if(length(data)>1 & det(data)==0 ){
-    stop("Matrix is not invertible (singular)")
-  }
 
   # Get the inverse and store in cacheMatrix
   inverse <- solve(data)
